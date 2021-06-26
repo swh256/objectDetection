@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import os
 
 #xml文件路径
-path = "/mnt/c/Users/s/OneDrive/doc/course/ML/exp2/data/person/Annotations"
+path = "./data/person/Annotations"
 # path = "/mnt/c/Users/s/OneDrive/doc/course/ML/exp2/testXml"
 os.chdir(path)
 files = os.listdir(path)
