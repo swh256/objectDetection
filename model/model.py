@@ -47,6 +47,7 @@ class Mynet(nn.Cell):
         self.lineNormal = nn.BatchNorm1d(num_features=7*7*11)
         self.relu = nn.ReLU()
     def construct(self, x): 
+        print('start construct!')
         x = self.conv1(x)
         x = self.lrelu(x) 
         x = self.max_pool2d(x) 
@@ -117,6 +118,7 @@ class Mynet(nn.Cell):
         # x = self.relu(x)
         # x = self.lineNormal(x)
         x = self.sigmoid(x)
+        print('end construct!')
         return x.reshape(-1, (5*2+1), 7, 7)
 
         #fast version

@@ -24,27 +24,27 @@ def train_net( model, epoch_size, ds_path, param, ckpoint_cb):
     print("============== Starting Training ==============")
    
     # generate data
-    # utils.VOC2pkl(ds_path,'train',param)
+    utils.VOC2pkl(ds_path,'test')
 
      #load training dataset
 
-    dataset_generator = utils.DatasetGenerator('./model/pkl/train.pkl')
+    dataset_generator = utils.DatasetGenerator('./model/pkl/test.pkl')
     data = ds.GeneratorDataset(
-        dataset_generator, ["image", "label"], shuffle=True)
-
+        dataset_generator, ["image", "label"], shuffle=False)
+    data = data.batch(2)
         #set batch_size
     a = 0
-    for i in data.create_dict_iterator():
-        print('get size')
-        print(i['image'].shape)
-        break
+    # for i in data.create_dict_iterator():
+    #     print(i['image'].shape)
+    #     print(i['label'].shape)
+    #     break
+        
         
     # print(a)
-    data = data.batch(param.batch_size)
+
     
-    model.train(epoch_size, data, callbacks=[ckpoint_cb, LossMonitor()])
+    model.train(epoch_size, data,dataset_sink_mode=False, callbacks=[ckpoint_cb, LossMonitor()])
 if __name__ == '__main__':
-    print(os.getcwd())
     # parser = argparse.ArgumentParser(description='MindSpore LeNet Example')
     # parser.add_argument('--device_target', type=str, default="CPU", choices=['Ascend', 'GPU', 'CPU'])
 

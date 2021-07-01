@@ -18,7 +18,8 @@ class MyLoss(nn.Cell):
         :return: 当前批次样本的平均损失
         """
         print('******************loss start!')
-        print()
+        print(labels.shape)
+        print(pred.shape)
         pred = pred.asnumpy()
         labels = labels.asnumpy()
         num_gridx, num_gridy = labels.shape[-2:]  # 划分网格数量

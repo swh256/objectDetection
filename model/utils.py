@@ -10,7 +10,7 @@ import mindspore
 import torch
 import mindspore.ops as ops
 import cv2
-
+import time
 CLASS = ['person']
 pklPath = './model/pkl/'
 
@@ -34,73 +34,70 @@ class DatasetGenerator:
         return len(self.dataset)
 
     def __getitem__(self, index):
-        print('1')
         img = self.dataset[index]['image']
-        print('2')
-        img = pv.ToTensor()(img)
-        print('3')
+
         bbox = self.dataset[index]['label']
-        print('4')
-        print(bbox.shape)
-        label = convert_bbox2labels(bbox)  # ToTensor会进行255->1的缩放
-        print('5')
-        label = pv.ToTensor()(label*255.0)
-        
-        return img, label
+        print('getitem')
+        label = convert_bbox2labels(bbox)  
 
+        return (img,label)
 
-def VOC2pkl(dir, _type, para):
+class ItrDatasetGenerator:
+    ''' 自定义构造数据集类
+    '''
+
+    def __init__(self, file):
+        '''
+        Args:
+            is_train
+        '''
+        self.dataset = pickle.load(open(file, 'rb'))
+        # print(self.dataset[0]['image'])
+
+    def __len__(self):
+
+        return len(self.dataset)
+
+    def __getitem__(self, index):
+        img = self.dataset[index]['image']
+        # cv2.imshow('', ops.Transpose()(img,(1,2,0)).asnumpy())
+        # img = ops.Transpose()(img,(1,2,0)).asnumpy()
+        # print(img.shape)
+        # cv2.imshow('',img)
+        # cv2.waitKey (0)
+        label = self.dataset[index]['label']
+
+        # label = ops.Transpose()(label,(2,0,1)).asnumpy()
+        # print(label.shape)
+        return (img,label)
+
+def VOC2pkl(dir, _type):
     ''' 获取目的数据集
         获取train、test、val等pkl形式的数据集
         Args:
             dir (str):标准VOC数据集根路径
             type (str):取值为 train val test，指定要生成的数据类别
             para (Parameter): 参数对象
+        Return:
+            pkl :其中image是CHW形式的tensor
     '''
     print('************start generate data******************')
     _dataset = []  # 暂存数据
-    _data = {}
     info = {'width': 448, 'height': 448, 'name': 'person'}
     data = ds.VOCDataset(dir, task="Detection", usage=_type,
-                         decode=False, shuffle=True)
+                         decode=True, shuffle=False)
 
-    h, w = 720, 1280
-    input_size = 448
-    # TODO 暂时支持输入为720*1280，后续考虑泛化输入
-    # 图像padding
-    padw, padh = 0, 0
-    if h > w:
-        padw = (h - w) // 2
-    elif w > h:
-        padh = (w - h) // 2
-    transfList = Compose(
-        [pv.Decode(), pv.ToPIL(), pv.Pad(padding=[padw, padh, padw, padh]), pv.Resize([input_size, input_size]),pv.HWC2CHW, np.array])
-    # transfList = Compose(
-    #     [pv.Decode(), pv.ToPIL(), pv.Pad(padding=[padw, padh, padw, padh]), pv.Resize([input_size, input_size]), pv.ToTensor()])
-    data = data.map(transfList, input_columns='image')
-
-    # TODO 数据增广暂未做
-    # 根据padding和增广修改bbox
-    # def func(x): return mindspore.Tensor(np.array(x.squeeze()[0] * 448/1280., (x.squeeze()[
-    #     1] + 280)*448/1280., x.squeeze()[2]*448/1280., x.squeeze()[3]*448/1280.), mindspore.float32)
-
-    # data = data.map(operations=func, input_columns='bbox')
-    itr = data.create_dict_iterator()
-    # TODO 外部传入info
-
-    for item in itr:
+    num = 0
+    for item in data.create_dict_iterator():
+        image,bbox = func(item['image'],item['bbox'])
         _data = {}
-        _data['image'] = item['image'].asnumpy()
-        print(_data['image'].shape)
-        # 修改padding后的bbox
-        _tmp = item['bbox'].squeeze().asnumpy()
-        if(len(_tmp) < 4):
+        _data['image'] = image
+
+        #去除残缺数据
+        if(len(bbox) < 4):
             continue
-        item['bbox'] = mindspore.Tensor(np.array([_tmp[0] * 448/1280, (_tmp[
-            1] + 280)*448/1280, _tmp[2]*448/1280, _tmp[3]*448/1280]), mindspore.float32)
-        _data['label'] = bbox2label(item['bbox'], info)
-        
-        
+        _data['label'] = bbox2label(bbox, info)
+
         _dataset.append(_data)
 
     with open(pklPath+_type+'.pkl', 'wb') as f:
@@ -108,9 +105,78 @@ def VOC2pkl(dir, _type, para):
     # data = data.batch(para.batch_size, True)
     print('************generate data finished******************')
 
+    # def func1(x):
+    #     print('qq')
+    #     return x
+    # data = data.map(func1, input_columns=['image'])
+
+    # transfList = Compose(
+    #     [  func1, ])
+    # # transfList = Compose(
+    # #     [pv.Decode(), pv.ToPIL(), pv.Pad(padding=[padw, padh, padw, padh]), pv.Resize([input_size, input_size]), pv.ToTensor()])
+    # data = data.map(transfList, input_columns=['image','bbox'])
+
+    # # TODO 数据增广暂未做
+
+    # itr = data.create_dict_iterator()
+    # # TODO 外部传入info
+    # print(type(itr))
+    # for item in itr:
+    #     print('enter itr')
+
+
+def func(x,y):
+    #image 处理，包括padding resize到448*448 RGB归一化 ->CHW tensor
+    # _x = pv.Decode()(x)
+
+    # _y = y.squeeze().asnumpy()
+    # p1 = ((int)(_y[0]), (int)(_y[1]))
+    # p2 = ((int)(_y[0]+_y[2]), (int)(_y[1]+_y[3]))
+    # img = x.asnumpy()
+    # cls_name = 'person'
+
+    # cv2.rectangle(img,p1,p2,color=(255,0,0))
+    # cv2.line(img,(0,0),(1280,720),color=(255,0,0))
+    # cv2.circle(img,p1,102,color=(0,0,255))
+    # cv2.circle(img,p2,10,color=(0,255,0))
+    # cv2.putText(img,cls_name,p1,cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255))
+    # cv2.imshow("bbox",img)
+    # cv2.waitKey(0)
+
+    _x = pv.ToPIL()(x.asnumpy())
+    h,w = np.array(_x).shape[0:2]
+    padw, padh = 0, 0
+    if h > w:
+        padw = (h - w) // 2
+    elif w > h:
+        padh = (w - h) // 2
+    _x = pv.Pad(padding=[padw, padh, padw, padh])(_x)
+    _x = pv.Resize([448, 448])(_x)
+    _x = pv.ToTensor()(_x)
+    _x = np.array(_x)
+
+    #label 处理，从(xmin,ymin.xmax,ymax) => (xmin,ymin,h,w),但未处理len(bbox) < 4的情况
+    _y = y.squeeze().asnumpy()
+
+    if(len(_y) == 4):
+        m = max(h,w)
+        _y = mindspore.Tensor(np.array([_y[0] * 448/m, (_y[1] + abs(w-h)/2)*448/m, _y[2]*448/m, _y[3]*448/m]), mindspore.float32)
+        # _y = _y.asnumpy()
+        # p1 = ((int)(_y[0]), (int)(_y[1]))
+        # p2 = ((int)(_y[0]+_y[2]), (int)(_y[1]+_y[3]))
+        # img = ops.Transpose()(_x,(1,2,0)).asnumpy()
+        # cls_name = 'person'
+
+        # cv2.rectangle(img,p1,p2,color=(255,0,0))
+        # cv2.putText(img,cls_name,p1,cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255))
+        # cv2.imshow("bbox",img)
+        # cv2.waitKey(0)
+
+    return (_x,_y)
+
 
 def bbox2label(bbox, info):
-    '''bbox -> (cls,x,y,w,h)并进行了归一化
+    '''bbox -> (cls,xc,yc,w,h)并进行了归一化
 
         return:
 
@@ -118,13 +184,12 @@ def bbox2label(bbox, info):
     sbbox = np.squeeze(bbox)  # 去掉多余的维度
     dw = 1. / info['width']
     dh = 1. / info['height']
-
     x = ((2 * sbbox[0] + sbbox[2]) / 2 * dw).asnumpy()
     y = ((2 * sbbox[1] + sbbox[3]) / 2 * dh).asnumpy()
     w = (sbbox[2] * dw).asnumpy()
     h = (sbbox[3] * dh).asnumpy()
     cls = CLASS.index(info['name'])
-
+    
     return [cls, x, y, w, h]
 
 
@@ -134,6 +199,7 @@ def convert_bbox2labels(bbox):
     为了方便计算Loss
     注意，输入的bbox的信息是(xc,yc,w,h)格式的，转换为labels后，bbox的信息转换为了(px,py,w,h)格式
     '''
+
     gridsize = 1.0/7
     labels = np.zeros((7, 7, 5*2+1))  # 注意，此处需要根据不同数据集的类别个数进行修改
 
@@ -147,7 +213,8 @@ def convert_bbox2labels(bbox):
     labels[gridy, gridx, 5:10] = np.array(
         [gridpx, gridpy, bbox[3], bbox[4], 1])
     labels[gridy, gridx, 10+int(bbox[0])] = 1
-    return labels
+   
+    return ops.Transpose()( mindspore.Tensor( labels,mindspore.float32),(2,0,1)).asnumpy()
 
 
 

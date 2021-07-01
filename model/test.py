@@ -27,8 +27,8 @@ if __name__ == '__main__':
 
     # args = parser.parse_known_args()[0]
     # context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
-    param = Parameter()
-    utils.VOC2pkl('./data/person','test',param)
+    # param = Parameter()
+    # utils.VOC2pkl('./data/person','test')
     dataset_generator = utils.DatasetGenerator('./model/pkl/test.pkl')
     data = ds.GeneratorDataset(
         dataset_generator, ["image", "label"], shuffle=True)
@@ -37,13 +37,14 @@ if __name__ == '__main__':
 
     image = []
     label = []
+    print('start generate image')
     for da in data.create_dict_iterator():
-        print(da['image'].shape)
+        # print(da['image'].shape)
         
         image.append(da['image'])
         label.append(da['label'])
         
-
+    print('finish generate image')
 
     network = Mynet()
     # 将模型参数存入parameter的字典中
@@ -58,6 +59,7 @@ if __name__ == '__main__':
     res = []
     for img in image:
         res.append(model.predict(img))
+    print('test finish')
 
     for r in res:
       
