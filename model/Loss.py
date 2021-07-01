@@ -17,9 +17,6 @@ class MyLoss(nn.Cell):
         :param labels: (batchsize,11,7,7)的样本标签数据
         :return: 当前批次样本的平均损失
         """
-        print('******************loss start!')
-        print(labels.shape)
-        print(pred.shape)
         pred = pred.asnumpy()
         labels = labels.asnumpy()
         num_gridx, num_gridy = labels.shape[-2:]  # 划分网格数量
@@ -74,9 +71,9 @@ class MyLoss(nn.Cell):
         loss = coor_loss + obj_confi_loss + noobj_confi_loss + class_loss
         # 此处可以写代码验证一下loss的大致计算是否正确，这个要验证起来比较麻烦，比较简洁的办法是，将输入的pred置为全1矩阵，再进行误差检查，会直观很多。
         # self.get_loss()
-        print('****************loss end!')
-        print('the loss is')
-        print( loss/n_batch)
+        # print('****************loss end!')
+        # print('the loss is')
+        # print( loss/n_batch)
         return Tensor(loss/n_batch,mindspore.float32)
 
     def calculate_iou(self,bbox1, bbox2):

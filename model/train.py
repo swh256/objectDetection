@@ -31,7 +31,7 @@ def train_net( model, epoch_size, ds_path, param, ckpoint_cb):
     dataset_generator = utils.DatasetGenerator('./model/pkl/test.pkl')
     data = ds.GeneratorDataset(
         dataset_generator, ["image", "label"], shuffle=False)
-    data = data.batch(2)
+    data = data.batch(4)
         #set batch_size
     a = 0
     # for i in data.create_dict_iterator():
@@ -43,7 +43,7 @@ def train_net( model, epoch_size, ds_path, param, ckpoint_cb):
     # print(a)
 
     
-    model.train(epoch_size, data,dataset_sink_mode=False, callbacks=[ckpoint_cb, LossMonitor()])
+    model.train(10, data,dataset_sink_mode=False, callbacks=[ckpoint_cb, LossMonitor()])
 if __name__ == '__main__':
     # parser = argparse.ArgumentParser(description='MindSpore LeNet Example')
     # parser.add_argument('--device_target', type=str, default="CPU", choices=['Ascend', 'GPU', 'CPU'])

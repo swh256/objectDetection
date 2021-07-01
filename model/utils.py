@@ -37,7 +37,7 @@ class DatasetGenerator:
         img = self.dataset[index]['image']
 
         bbox = self.dataset[index]['label']
-        print('getitem')
+  
         label = convert_bbox2labels(bbox)  
 
         return (img,label)

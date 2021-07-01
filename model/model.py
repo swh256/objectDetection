@@ -36,8 +36,8 @@ class Mynet(nn.Cell):
         self.conv14 = nn.Conv2d(in_channels=1024,out_channels=1024, kernel_size=3,stride=2)
         self.conv15 = nn.Conv2d(in_channels=1024,out_channels=1024, kernel_size=3,stride=1)
         self.conv16= nn.Conv2d(in_channels=1024,out_channels=1024, kernel_size=3,stride=1)
-        self.dense1 = nn.Dense(in_channels=7*7*1024,out_channels=4096)
-        self.dense2 = nn.Dense(in_channels=4096,out_channels=7*7*11)
+        self.dense1 = nn.Dense(in_channels=7*7*512,out_channels=1024)
+        self.dense2 = nn.Dense(in_channels=1024,out_channels=7*7*11)
         self.flatten = nn.Flatten()
         self.sigmoid = nn.Sigmoid()
 
@@ -47,7 +47,7 @@ class Mynet(nn.Cell):
         self.lineNormal = nn.BatchNorm1d(num_features=7*7*11)
         self.relu = nn.ReLU()
     def construct(self, x): 
-        print('start construct!')
+
         x = self.conv1(x)
         x = self.lrelu(x) 
         x = self.max_pool2d(x) 
@@ -82,18 +82,18 @@ class Mynet(nn.Cell):
         # x = self.conv8(x)
         # x = self.lrelu(x)
 
-        x = self.conv9(x)
-        x = self.norm9(x)
-        x = self.lrelu(x)
+        # x = self.conv9(x)
+        # x = self.norm9(x)
+        # x = self.lrelu(x)
         # x = self.conv10(x)
         # x = self.lrelu(x)
         x = self.max_pool2d(x)
 
         # x = self.conv11(x)
         # x = self.lrelu(x)
-        x = self.conv12(x)
-        x = self.norm12(x)
-        x = self.lrelu(x)
+        # x = self.conv12(x)
+        # x = self.norm12(x)
+        # x = self.lrelu(x)
         x = self.max_pool2d(x)
         # x = self.conv11(x)
         # x = self.lrelu(x)
@@ -118,7 +118,7 @@ class Mynet(nn.Cell):
         # x = self.relu(x)
         # x = self.lineNormal(x)
         x = self.sigmoid(x)
-        print('end construct!')
+
         return x.reshape(-1, (5*2+1), 7, 7)
 
         #fast version
