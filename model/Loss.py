@@ -101,11 +101,4 @@ class MyLoss(nn.Cell):
             return 0
 
 
-# if __name__ == '__main__':
-#     labels = Tensor(np.zeros((2,11,7,7)), mindspore.float32)
-#     labels2 = Tensor(np.ones((2,11,7,7)), mindspore.float32)
-#     print(labels.shape[-2:])
-#     loss = MyLoss()
-#     # print(loss(labels,labels2))
-#     print(loss.construct(labels,labels))
 

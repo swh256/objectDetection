@@ -47,7 +47,6 @@ class Mynet(nn.Cell):
         self.lineNormal = nn.BatchNorm1d(num_features=7*7*11)
         self.relu = nn.ReLU()
     def construct(self, x): 
-
         x = self.conv1(x)
         x = self.lrelu(x) 
         x = self.max_pool2d(x) 
@@ -65,10 +64,10 @@ class Mynet(nn.Cell):
         x = self.lrelu(x)
         x = self.max_pool2d(x)
 
-        x = self.conv7(x)
-        x = self.lrelu(x)
-        x = self.conv8(x)
-        x = self.lrelu(x)
+        # x = self.conv7(x)
+        # x = self.lrelu(x)
+        # x = self.conv8(x)
+        # x = self.lrelu(x)
         # x = self.conv7(x)
         # x = self.lrelu(x)
         # x = self.conv8(x)
@@ -82,9 +81,9 @@ class Mynet(nn.Cell):
         # x = self.conv8(x)
         # x = self.lrelu(x)
 
-        # x = self.conv9(x)
-        # x = self.norm9(x)
-        # x = self.lrelu(x)
+        x = self.conv9(x)
+        x = self.norm9(x)
+        x = self.lrelu(x)
         # x = self.conv10(x)
         # x = self.lrelu(x)
         x = self.max_pool2d(x)

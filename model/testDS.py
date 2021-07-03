@@ -21,27 +21,46 @@ img =  cv2.imread('./data/person/JPEGImages/3202000001_21012232000601039837_0323
 #     print(i['image'].shape)
 
 # utils.VOC2pkl('./data/person','test')
-print("VOC2PKl is ok!")
-dataset_generator = utils.DatasetGenerator('./model/pkl/train.pkl')
-dataset = ds.GeneratorDataset(dataset_generator, ["image", "label"], shuffle=True)
-print("load dataset is ok!")
-label  = []
-dataset = dataset.batch(2)
-for data in dataset.create_dict_iterator():
-    print(data['image'].shape)
-    print(data['label'].shape)
-    label = data['label']
-    break
+# print("VOC2PKl is ok!")
+# dataset_generator = utils.DatasetGenerator('./model/pkl/train.pkl')
+# dataset = ds.GeneratorDataset(dataset_generator, ["image", "label"], shuffle=True)
+# print("load dataset is ok!")
+# label  = []
+# dataset = dataset.batch(2)
+# for data in dataset.create_dict_iterator():
+#     print(data['image'].shape)
+#     print(data['label'].shape)
+#     label = data['label']
+#     break
 
-loss = Loss.MyLoss()
-print(label.asnumpy().shape)
-print(loss(label,label))
-    # cv2.imshow('',  ops.Transpose()(data['image'],(1,2,0)).asnumpy())
-    # cv2.waitKey (0)
+# loss = Loss.MyLoss()
+# print(label.asnumpy().shape)
+# print(loss(label,label))
+#     # cv2.imshow('',  ops.Transpose()(data['image'],(1,2,0)).asnumpy())
+#     # cv2.waitKey (0)
    
 
 
-# print("generate img is ok!")
+# # print("generate img is ok!")
+
+dataset_generator = utils.DatasetGenerator('./model/pkl/test/test.pkl')
+data = ds.GeneratorDataset(
+    dataset_generator, ["image", "label"], shuffle=True)
+
+
+#将image和label分隔开
+image = []
+label = []
+print('start generate image')
+for da in data.create_dict_iterator():
+    image.append(da['image'])
+    label.append(da['label'])  
+print('finish generate image')
+
+for index in range(len(image)):
+    
+    utils.show_img(image[index],label[index])
+
 
     
 

@@ -21,50 +21,47 @@ from mindspore import context
 import mindspore.ops as ops
 
 if __name__ == '__main__':
-    print(os.getcwd())
-    # parser = argparse.ArgumentParser(description='MindSpore LeNet Example')
-    # parser.add_argument('--device_target', type=str, default="CPU", choices=['Ascend', 'GPU', 'CPU'])
+    #定义参数
+    parser = argparse.ArgumentParser(description='MindSpore LeNet Example')
+    parser.add_argument('--workbash', type=str, default = None)
+    parser.add_argument('--ckpt', type=str, default=None)
+    parser.add_argument('--test_ds', type=str, default=None)
+    args = parser.parse_args()
 
-    # args = parser.parse_known_args()[0]
-    # context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
-    # param = Parameter()
-    # utils.VOC2pkl('./data/person','test')
-    dataset_generator = utils.DatasetGenerator('./model/pkl/test.pkl')
+    path = args.workbash
+    pklPath = "./model/pkl/test/"
+    #切换工作目录
+    os.chdir(path)
+    #生成加载测试数据集
+    dataset_generator = utils.DatasetGenerator(pklPath+args.test_ds)
     data = ds.GeneratorDataset(
         dataset_generator, ["image", "label"], shuffle=True)
-
     data = data.batch(1)
 
+    #将image和label分隔开
     image = []
     label = []
     print('start generate image')
     for da in data.create_dict_iterator():
-        # print(da['image'].shape)
-        
         image.append(da['image'])
-        label.append(da['label'])
-        
+        label.append(da['label'])  
     print('finish generate image')
 
+    #定义网络
     network = Mynet()
     # 将模型参数存入parameter的字典中
-    param_dict = load_checkpoint("./model/ckPoint/Mynet-1_200.ckpt")
+    param_dict = load_checkpoint("./model/ckPoint/" + args.ckpt)
     # 将参数加载到网络中
     load_param_into_net(network, param_dict)
 
-    #define the optimizer
-    # print(network.trainable_params())
-
     model = Model(network)
     res = []
-    for img in image:
+    for img in image[0:10]:
         res.append(model.predict(img))
-    print('test finish')
+    print('predict finish!')
 
-    for r in res:
-      
-        for img in image:
-            utils.show_img(img,r)
-            break
-            
-        
+    for index in range(len(res)):
+    
+        utils.show_img(image[index],res[index])
+
+

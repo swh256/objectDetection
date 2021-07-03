@@ -18,60 +18,82 @@ import pickle
 import argparse
 import mindspore
 from mindspore import context
+import argparse
 # p = progressbar.ProgressBar()
-def train_net( model, epoch_size, ds_path, param, ckpoint_cb):
-    """define the training method"""
-    print("============== Starting Training ==============")
-   
-    # generate data
-    utils.VOC2pkl(ds_path,'test')
 
-     #load training dataset
-
-    dataset_generator = utils.DatasetGenerator('./model/pkl/test.pkl')
+def train(model,pklPath,epoch_size,batch_size,ckpoint_cb):
+    dataset_generator = utils.DatasetGenerator(pklPath)
     data = ds.GeneratorDataset(
         dataset_generator, ["image", "label"], shuffle=False)
-    data = data.batch(4)
+    data = data.batch(batch_size)
         #set batch_size
-    a = 0
-    # for i in data.create_dict_iterator():
-    #     print(i['image'].shape)
-    #     print(i['label'].shape)
-    #     break
+    model.train(epoch_size, data,dataset_sink_mode=False, callbacks=[ckpoint_cb, LossMonitor()])
+
+# def train_net( model, epoch_size, ds_path, param, ckpoint_cb):
+#     """define the training method"""
+#     print("============== Starting Training ==============")
+   
+
+
+#      #load training dataset
+
+#     dataset_generator = utils.DatasetGenerator('./model/pkl/test.pkl')
+#     data = ds.GeneratorDataset(
+#         dataset_generator, ["image", "label"], shuffle=False)
+#     data = data.batch(4)
+#         #set batch_size
+#     a = 0
+#     # for i in data.create_dict_iterator():
+#     #     print(i['image'].shape)
+#     #     print(i['label'].shape)
+#     #     break
         
         
-    # print(a)
+#     # print(a)
 
     
-    model.train(10, data,dataset_sink_mode=False, callbacks=[ckpoint_cb, LossMonitor()])
+#     model.train(epoch_size, data,dataset_sink_mode=False, callbacks=[ckpoint_cb, LossMonitor()])
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(description='MindSpore LeNet Example')
-    # parser.add_argument('--device_target', type=str, default="CPU", choices=['Ascend', 'GPU', 'CPU'])
+    parser = argparse.ArgumentParser(description='manual to this script')
+    parser.add_argument('--workbash', type=str, default = None)
+    parser.add_argument('--ds_name',type=str, default=None)
+    parser.add_argument('--ckpt',type=str, default=None)
+    # parser.add_argument('--batch-size', type=int, default=32)
+    args = parser.parse_args()
 
-    # args = parser.parse_known_args()[0]
-    # context.set_context(mode=context.GRAPH_MODE, device_target=args.device_target)
-
-
-
-    param = Parameter()
+    ds.config.set_num_parallel_workers(8)
+    path=args.workbash
+    os.chdir(path)
         # set parameters of check point
-    config_ck = CheckpointConfig(save_checkpoint_steps=20, keep_checkpoint_max=1) 
+    config_ck = CheckpointConfig(save_checkpoint_steps=5, keep_checkpoint_max=1) 
     # apply parameters of check point
     ckpoint_cb = ModelCheckpoint(prefix="Mynet", directory='./model/ckPoint', config=config_ck)
-    epoch_size = 1    
     ds_path = "./data/person"
+    pklPath = "./model/pkl/train/"
      #learning rate setting
     lr = 0.01
     momentum = 0.9
     #create the network
     network = Mynet()
-    # # 将模型参数存入parameter的字典中
-    # param_dict = load_checkpoint("./model/ckPoint/Mynet-1_40.ckpt")
-    # # 将参数加载到网络中
-    # load_param_into_net(network, param_dict)
     net_loss =  MyLoss()
     #define the optimizer
     # print(network.trainable_params())
     net_opt = nn.Adam(network.trainable_params(), lr,weight_decay=0.0005)
+    # generate data
+    # utils.VOC2pkl(ds_path,'test')
+    param_dict = load_checkpoint("./model/ckPoint/" + args.ckpt)
+    # for f in os.listdir(pklPath):
+        # try:
+    ckpt = args.ckpt
+    # 将模型参数存入parameter的字典中
+    param_dict = load_checkpoint("./model/ckPoint/" + ckpt)
+    # 将参数加载到网络中
+    load_param_into_net(network, param_dict)
+
+
     model = Model(network, net_loss, net_opt, metrics={"Accuracy": Accuracy()})
-    train_net( model, epoch_size, ds_path, param, ckpoint_cb)
+    train(model,pklPath + args.ds_name, 1,4,ckpoint_cb)
+        #删除多余ckpt文件
+            
+        # except:
+        #     print('err\n')

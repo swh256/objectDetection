@@ -85,7 +85,7 @@ def VOC2pkl(dir, _type):
     _dataset = []  # 暂存数据
     info = {'width': 448, 'height': 448, 'name': 'person'}
     data = ds.VOCDataset(dir, task="Detection", usage=_type,
-                         decode=True, shuffle=False)
+                         decode=True, shuffle=True)
 
     num = 0
     for item in data.create_dict_iterator():
@@ -99,9 +99,17 @@ def VOC2pkl(dir, _type):
         _data['label'] = bbox2label(bbox, info)
 
         _dataset.append(_data)
-
-    with open(pklPath+_type+'.pkl', 'wb') as f:
-        pickle.dump(_dataset, f)
+    length = len(_dataset)
+    #如果是测试集或者验证集，则分片保存
+    if(_type == 'train' or _type=='val'):
+        for i in range(int(np.ceil(length/20))):
+            print("generate ",i,"th dataset")
+            _subDs = _dataset[20*i:20*i+20]
+            with open(pklPath+_type+ '/'+_type+str(i)+'.pkl', 'wb') as f:
+                pickle.dump(_subDs, f)
+    else:
+        with open(pklPath+_type+ '/'+_type+'.pkl', 'wb') as f:
+            pickle.dump(_dataset, f)
     # data = data.batch(para.batch_size, True)
     print('************generate data finished******************')
 
