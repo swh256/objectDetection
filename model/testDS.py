@@ -43,7 +43,7 @@ img =  cv2.imread('./data/person/JPEGImages/3202000001_21012232000601039837_0323
 
 # # print("generate img is ok!")
 
-dataset_generator = utils.DatasetGenerator('./model/pkl/test/test.pkl')
+dataset_generator = utils.DatasetGenerator('./model/pkl/train/train0.pkl')
 data = ds.GeneratorDataset(
     dataset_generator, ["image", "label"], shuffle=True)
 

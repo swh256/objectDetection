@@ -84,9 +84,9 @@ if __name__ == '__main__':
     param_dict = load_checkpoint("./model/ckPoint/" + args.ckpt)
     # for f in os.listdir(pklPath):
         # try:
-    ckpt = args.ckpt
-    # 将模型参数存入parameter的字典中
-    param_dict = load_checkpoint("./model/ckPoint/" + ckpt)
+    # ckpt = args.ckpt
+    # # 将模型参数存入parameter的字典中
+    # param_dict = load_checkpoint("./model/ckPoint/" + ckpt)
     # 将参数加载到网络中
     load_param_into_net(network, param_dict)
 
